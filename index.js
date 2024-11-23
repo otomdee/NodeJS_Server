@@ -1,40 +1,35 @@
-const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs');
+const express = require('express');
+const { error } = require('node:console');
 
-const server = http.createServer((req, res) => {
+const app = express();
 
-    let filePath = path.join(
-        __dirname,
-        'src',
-        req.url === '/' ? 'index.html' : req.url + '.html'
-    )
+const PORT = process.env.PORT || 3000;
 
-    console.log(filePath);
+let indexFile = fs.readFileSync(path.join(__dirname, "src", "index.html"), 'utf-8');
+let aboutFile = fs.readFileSync(path.join(__dirname, "src", "about.html"), 'utf-8');
+let contactFile = fs.readFileSync(path.join(__dirname, "src", "contactMe.html"), 'utf-8');
+let errorFile = fs.readFileSync(path.join(__dirname, "src", "404.html"), 'utf-8');
 
-    fs.readFile(filePath, (err, content) => {
-        if (err) {
-            if(err.code == 'ENOENT') {
-                fs.readFile(path.join(__dirname, 'src', '404.html'), (inErr, content) => {
-                    if (inErr) console.log(inErr.code);
-                    res.writeHead(200, {'Content-Type' : 'text/html'});
-                    res.end(content);
-                })
-            }
-            else {
-                res.writeHead(500, {'Content-Type' : 'text/html'});
-                res.end(`<h1>Server error: ${err.code}</h1>`);
-            }
-        }
-        else {
-            res.writeHead(200, {'Content-Type' : 'text/html'});
-            res.end(content);
-        }
-    })
+
+app.get('/', (req, res) => {
+   res.setHeader('Content-Type', 'text/html');
+   res.send(indexFile);
 })
 
-const PORT = process.env.PORT || 8080;
+app.get('/about', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(aboutFile);
+ })
+ 
+ app.get('/contact', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(contactFile);
+ })
 
-server.listen(PORT, () => {
-    console.log(`server running on port ${PORT}`);
+ app.get('*', (req, res) => {
+    res.status(404).send(errorFile);
 })
+
+app.listen(PORT, () => console.log(`listening on port ${PORT}`));
